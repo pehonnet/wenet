@@ -6,7 +6,6 @@
 * Training info: lr 0.002, batch size 18, 4 gpu, acc_grad 4, 240 epochs, dither 0.1
 * Decoding info: ctc_weight 0.5, average_num 20
 * Git hash: 919f07c4887ac500168ba84b39b535fd8e58918a
-* Model link: https://wenet-1256283475.cos.ap-shanghai.myqcloud.com/models/aishell/20211025_conformer_exp.tar.gz
 
 | decoding mode             | CER   |
 |---------------------------|-------|
@@ -20,7 +19,7 @@
 
 * Feature info: using fbank feature, dither=1.0, cmvn, oneline speed perturb
 * Training info: lr 0.001, batch size 16, 8 gpu, acc_grad 1, 360 epochs
-* Decoding info: ctc_weight 0.3, reverse_weight 0.5  average_num 30
+* Decoding info: ctc_weight 0.3, reverse_weight 0.5  average_num 30, lm_scale 0.7, decoder_scale 0.1, r_decoder_scale 0.7
 * Git hash: 5a1342312668e7a5abb83aed1e53256819cebf95
 
 | decoding mode/chunk size  | full  | 16    |
@@ -29,6 +28,8 @@
 | ctc prefix beam search    | 5.17  | 5.81  |
 | attention rescoring       | 4.63  | 5.05  |
 | LM + attention rescoring  | 4.40  | 4.75  |
+| HLG(k2 LM)                | 4.81  | 5.27  |
+| HLG(k2 LM)  + attention rescoring | 4.32  | 4.70  |
 
 ## Unified Conformer Result
 
@@ -132,3 +133,48 @@
 | ctc prefix beam search | 4.94    | 4.97       |
 | attention rescoring    | 4.61    | 4.69       |
 
+
+## Efficient Conformer v1 Result
+
+* Feature info:
+    * using fbank feature, cmvn, speed perturb, dither
+* Training info:
+    * train_u2++_efficonformer_v1.yaml
+    * 8 gpu, batch size 16, acc_grad 1, 200 epochs
+    * lr 0.001, warmup_steps 25000
+* Model info:
+    * Model Params: 48,488,347
+    * Downsample rate: 1/4 (conv2d) * 1/2 (efficonformer block)
+    * encoder_dim 256, output_size 256, head 8, linear_units 2048
+    * num_blocks 12, cnn_module_kernel 15, group_size 3
+* Decoding info:
+    * ctc_weight 0.5, reverse_weight 0.3, average_num 20
+
+| decoding mode          | full | 18   | 16   |
+|------------------------|------|------|------|
+| attention decoder      | 4.99 | 5.13 | 5.16 |
+| ctc prefix beam search | 4.98 | 5.23 | 5.23 |
+| attention rescoring    | 4.64 | 4.86 | 4.85 |
+
+
+## Efficient Conformer v2 Result
+
+* Feature info:
+    * using fbank feature, cmvn, speed perturb, dither
+* Training info:
+    * train_u2++_efficonformer_v2.yaml
+    * 8 gpu, batch size 16, acc_grad 1, 200 epochs
+    * lr 0.001, warmup_steps 25000
+* Model info:
+    * Model Params: 49,354,651
+    * Downsample rate: 1/2 (conv2d2) * 1/4 (efficonformer block)
+    * encoder_dim 256, output_size 256, head 8, linear_units 2048
+    * num_blocks 12, cnn_module_kernel 15, group_size 3
+* Decoding info:
+    * ctc_weight 0.5, reverse_weight 0.3, average_num 20
+
+| decoding mode          | full | 18   | 16   |
+|------------------------|------|------|------|
+| attention decoder      | 4.87 | 5.03 | 5.07 |
+| ctc prefix beam search | 4.97 | 5.18 | 5.20 |
+| attention rescoring    | 4.56 | 4.75 | 4.77 |

@@ -9,8 +9,8 @@
 | [**训练模型教程 1**](https://wenet.org.cn/wenet/tutorial_librispeech.html)
 | [**训练模型教程 2**](https://wenet.org.cn/wenet/tutorial_aishell.html)
 | [**WeNet 论文**](https://wenet-e2e.github.io/wenet/papers.html)
-| [**x86 识别服务**](https://github.com/wenet-e2e/wenet/tree/main/runtime/server/x86)
-| [**android 本地识别**](https://github.com/wenet-e2e/wenet/tree/main/runtime/device/android/wenet)
+| [**x86 识别服务**](https://github.com/wenet-e2e/wenet/tree/main/runtime/libtorch)
+| [**android 本地识别**](https://github.com/wenet-e2e/wenet/tree/main/runtime/android)
 
 
 
@@ -40,7 +40,7 @@ docker run --rm -it -p 10086:10086 -v $model_dir:/home/wenet/model wenetorg/wene
 
 **实时识别**
 
-使用浏览器打开文件`wenet/runtime/server/x86/web/templates/index.html`，在 `WebSocket URL` 中填入 `ws://127.0.0.1:10086` (若在windows下通过wsl2运行docker,  则使用`ws://localhost:10086`) , 允许浏览器弹出的请求使用麦克风，即可通过麦克风进行实时语音识别。
+使用浏览器打开文件`wenet/runtime/libtorch/web/templates/index.html`，在 `WebSocket URL` 中填入 `ws://127.0.0.1:10086` (若在windows下通过wsl2运行docker,  则使用`ws://localhost:10086`) , 允许浏览器弹出的请求使用麦克风，即可通过麦克风进行实时语音识别。
 
 ![Runtime web](/docs/images/runtime_web.png)
 
@@ -92,11 +92,6 @@ bash run.sh --stage -1
 | <img src="https://github.com/robin1001/qr/blob/master/wenet.jpeg" width="250px"> | <img src="https://github.com/robin1001/qr/blob/master/binbin.jpeg" width="250px"> |
 | ---- | ---- |
 
-## 贡献者列表
-
-| <a href="https://www.chumenwenwen.com" target="_blank"><img src="https://raw.githubusercontent.com/wenet-e2e/wenet-contributors/main/companies/chumenwenwen.png" width="250px"></a> | <a href="http://lxie.npu-aslp.org" target="_blank"><img src="https://raw.githubusercontent.com/wenet-e2e/wenet-contributors/main/colleges/nwpu.png" width="250px"></a> | <a href="http://www.aishelltech.com" target="_blank"><img src="https://raw.githubusercontent.com/wenet-e2e/wenet-contributors/main/companies/aishelltech.png" width="250px"></a> | <a href="http://www.ximalaya.com" target="_blank"><img src="https://raw.githubusercontent.com/wenet-e2e/wenet-contributors/main/companies/ximalaya.png" width="250px"></a> | <a href="https://www.jd.com" target="_blank"><img src="https://raw.githubusercontent.com/wenet-e2e/wenet-contributors/main/companies/jd.jpeg" width="250px"></a> |
-| ---- | ---- | ---- | ---- | ---- |
-
 ## 致谢
 
 WeNet 借鉴了一些优秀的开源项目，包括
@@ -114,7 +109,7 @@ WeNet 借鉴了一些优秀的开源项目，包括
   author={Yao, Zhuoyuan and Wu, Di and Wang, Xiong and Zhang, Binbin and Yu, Fan and Yang, Chao and Peng, Zhendong and Chen, Xiaoyu and Xie, Lei and Lei, Xin},
   booktitle={Proc. Interspeech},
   year={2021},
-  address={Brno, Czech Republic }
+  address={Brno, Czech Republic },
   organization={IEEE}
 }
 

@@ -14,8 +14,8 @@
 
 #include "post_processor/post_processor.h"
 
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "utils/string.h"
 
@@ -27,7 +27,7 @@ std::string PostProcessor::ProcessSpace(const std::string& str) {
   // only spaces between mandarin words need to be removed, please note that
   // if str contains '_', we assume that the decoding type must be
   // `CtcPrefixBeamSearch` and this branch will do nothing since str must be
-  // obtained via "".join() (in function `TorchAsrDecoder::UpdateResult()`)
+  // obtained via "".join() (in function `AsrDecoder::UpdateResult()`)
   if (opts_.language_type == kMandarinEnglish && !str.empty()) {
     result.clear();
     // split str by ' '

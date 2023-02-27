@@ -15,11 +15,11 @@
 #ifndef UTILS_STRING_H_
 #define UTILS_STRING_H_
 
+#include <codecvt>
+#include <locale>
 #include <memory>
 #include <string>
 #include <vector>
-#include <locale>
-#include <codecvt>
 
 #include "fst/symbol-table.h"
 
@@ -53,6 +53,8 @@ bool CheckEnglishWord(const std::string& word);
 std::string JoinString(const std::string& c,
                        const std::vector<std::string>& strs);
 
+bool IsAlpha(const std::string& str);
+
 // Split the UTF-8 string into words by symbol table.
 // Return whether not contains oov.
 bool SplitUTF8StringToWords(
@@ -70,6 +72,10 @@ std::string Rtrim(const std::string& str);
 std::string Trim(const std::string& str);
 
 std::string JoinPath(const std::string& left, const std::string& right);
+
+#ifdef _MSC_VER
+std::wstring ToWString(const std::string& str);
+#endif
 
 }  // namespace wenet
 

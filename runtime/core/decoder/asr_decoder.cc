@@ -1,6 +1,18 @@
-// Copyright 2020 Mobvoi Inc. All Rights Reserved.
-// Author: binbinzhang@mobvoi.com (Binbin Zhang)
-//         di.wu@mobvoi.com (Di Wu)
+// Copyright (c) 2020 Mobvoi Inc (Binbin Zhang, Di Wu)
+//               2022 Binbin Zhang (binbzha@qq.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 #include "decoder/asr_decoder.h"
 
@@ -14,9 +26,9 @@
 
 namespace wenet {
 
-AsrDecoder::AsrDecoder(
-    std::shared_ptr<FeaturePipeline> feature_pipeline,
-    std::shared_ptr<DecodeResource> resource, const DecodeOptions& opts)
+AsrDecoder::AsrDecoder(std::shared_ptr<FeaturePipeline> feature_pipeline,
+                       std::shared_ptr<DecodeResource> resource,
+                       const DecodeOptions& opts)
     : feature_pipeline_(std::move(feature_pipeline)),
       // Make a copy of the model ASR model since we will change the inner
       // status of the model
@@ -36,7 +48,7 @@ AsrDecoder::AsrDecoder(
                                             resource->context_graph));
   } else {
     searcher_.reset(new CtcWfstBeamSearch(*fst_, opts.ctc_wfst_search_opts,
-                                         resource->context_graph));
+                                          resource->context_graph));
   }
   ctc_endpointer_->frame_shift_in_ms(frame_shift_in_ms());
 }
@@ -61,11 +73,9 @@ void AsrDecoder::ResetContinuousDecoding() {
   ctc_endpointer_->Reset();
 }
 
-
 DecodeState AsrDecoder::Decode(bool block) {
   return this->AdvanceDecoding(block);
 }
-
 
 void AsrDecoder::Rescoring() {
   // Do attention rescoring
@@ -74,30 +84,35 @@ void AsrDecoder::Rescoring() {
   VLOG(2) << "Rescoring cost latency: " << timer.Elapsed() << "ms.";
 }
 
-
 DecodeState AsrDecoder::AdvanceDecoding(bool block) {
   DecodeState state = DecodeState::kEndBatch;
   model_->set_chunk_size(opts_.chunk_size);
   model_->set_num_left_chunks(opts_.num_left_chunks);
-  int num_requried_frames = model_->num_frames_for_chunk(start_);
+  int num_required_frames = model_->num_frames_for_chunk(start_);
   std::vector<std::vector<float>> chunk_feats;
   // Return immediately if we do not want to block
   if (!block && !feature_pipeline_->input_finished() &&
-      feature_pipeline_->NumQueuedFrames() < num_requried_frames) {
+      feature_pipeline_->NumQueuedFrames() < num_required_frames) {
     return DecodeState::kWaitFeats;
   }
   // If not okay, that means we reach the end of the input
-  if (!feature_pipeline_->Read(num_requried_frames, &chunk_feats)) {
+  if (!feature_pipeline_->Read(num_required_frames, &chunk_feats)) {
     state = DecodeState::kEndFeats;
   }
 
   num_frames_ += chunk_feats.size();
-  VLOG(2) << "Required " << num_requried_frames << " get "
+  VLOG(2) << "Required " << num_required_frames << " get "
           << chunk_feats.size();
   Timer timer;
   std::vector<std::vector<float>> ctc_log_probs;
   model_->ForwardEncoder(chunk_feats, &ctc_log_probs);
   int forward_time = timer.Elapsed();
+  if (opts_.ctc_wfst_search_opts.blank_scale != 1.0) {
+    for (int i = 0; i < ctc_log_probs.size(); i++) {
+      ctc_log_probs[i][0] = ctc_log_probs[i][0]
+                  + std::log(opts_.ctc_wfst_search_opts.blank_scale);
+    }
+  }
   timer.Reset();
   searcher_->Search(ctc_log_probs);
   int search_time = timer.Elapsed();
@@ -115,7 +130,6 @@ DecodeState AsrDecoder::AdvanceDecoding(bool block) {
   start_ = true;
   return state;
 }
-
 
 void AsrDecoder::UpdateResult(bool finish) {
   const auto& hypotheses = searcher_->Outputs();
@@ -153,20 +167,23 @@ void AsrDecoder::UpdateResult(bool finish) {
       CHECK_EQ(input.size(), time_stamp.size());
       for (size_t j = 0; j < input.size(); j++) {
         std::string word = unit_table_->Find(input[j]);
-        int start = time_stamp[j] * frame_shift_in_ms() - time_stamp_gap_ > 0 ?
-            time_stamp[j] * frame_shift_in_ms() - time_stamp_gap_ : 0;
+        int start = time_stamp[j] * frame_shift_in_ms() - time_stamp_gap_ > 0
+                        ? time_stamp[j] * frame_shift_in_ms() - time_stamp_gap_
+                        : 0;
         if (j > 0) {
-          start = (time_stamp[j] - time_stamp[j-1]) * frame_shift_in_ms() <
-              time_stamp_gap_ ? (time_stamp[j - 1] + time_stamp[j]) / 2 *
-                                frame_shift_in_ms()
-                              : start;
+          start = (time_stamp[j] - time_stamp[j - 1]) * frame_shift_in_ms() <
+                          time_stamp_gap_
+                      ? (time_stamp[j - 1] + time_stamp[j]) / 2 *
+                            frame_shift_in_ms()
+                      : start;
         }
         int end = time_stamp[j] * frame_shift_in_ms();
         if (j < input.size() - 1) {
           end = (time_stamp[j + 1] - time_stamp[j]) * frame_shift_in_ms() <
-              time_stamp_gap_ ? (time_stamp[j + 1] + time_stamp[j]) / 2 *
-                                frame_shift_in_ms()
-                              : end;
+                        time_stamp_gap_
+                    ? (time_stamp[j + 1] + time_stamp[j]) / 2 *
+                          frame_shift_in_ms()
+                    : end;
         }
         WordPiece word_piece(word, offset + start, offset + end);
         path.word_pieces.emplace_back(word_piece);

@@ -1,5 +1,17 @@
-// Copyright 2021 Mobvoi Inc. All Rights Reserved.
-// Author: binbinzhang@mobvoi.com (Binbin Zhang)
+// Copyright (c) 2021 Mobvoi Inc (Binbin Zhang)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 #include "decoder/ctc_wfst_beam_search.h"
 
@@ -15,8 +27,7 @@ void DecodableTensorScaled::Reset() {
   logp_.clear();
 }
 
-void DecodableTensorScaled::AcceptLoglikes(
-    const std::vector<float>& logp) {
+void DecodableTensorScaled::AcceptLoglikes(const std::vector<float>& logp) {
   ++num_frames_ready_;
   // TODO(Binbin Zhang): Avoid copy here
   logp_ = logp;
@@ -68,14 +79,14 @@ void CtcWfstBeamSearch::Search(const std::vector<std::vector<float>>& logp) {
   // Every time we get the log posterior, we decode it all before return
   for (int i = 0; i < logp.size(); i++) {
     float blank_score = std::exp(logp[i][0]);
-    if (blank_score > opts_.blank_skip_thresh) {
+    if (blank_score > opts_.blank_skip_thresh * opts_.blank_scale) {
       VLOG(3) << "skipping frame " << num_frames_ << " score " << blank_score;
       is_last_frame_blank_ = true;
       last_frame_prob_ = logp[i];
     } else {
       // Get the best symbol
-      int cur_best = std::max_element(logp[i].begin(),
-                                      logp[i].end()) - logp[i].begin();
+      int cur_best =
+          std::max_element(logp[i].begin(), logp[i].end()) - logp[i].begin();
       // Optional, adding one blank frame if we has skipped it in two same
       // symbols
       if (cur_best != 0 && is_last_frame_blank_ && cur_best == last_best_) {
